@@ -8,8 +8,8 @@ link_directories(${catkin_LIBRARY_DIRS})
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++0x" )
 
 ## This plugin includes Qt widgets, so we must include Qt like so:
-find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
-include(${QT_USE_FILE})
+find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+set(QT_LIBRARIES Qt5::Widgets)
 
 ## I prefer the Qt signals and slots to avoid defining "emit", "slots",
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
@@ -17,7 +17,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 ## Here we specify which header files need to be run through "moc",
 ## Qt's meta-object compiler.
-qt4_wrap_cpp(MOC_FILES
+qt5_wrap_cpp(QT_HEADER_FILES
   include/fps_motion_view_controller.h
   include/fps_motion_tool.h
 )
@@ -32,6 +32,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${Qt5_INCLUDE_DIRS}
 )
 
 # Here we specify the list of source files, including the output of
@@ -45,11 +46,18 @@ set(SOURCE_FILES
 ## An rviz plugin is just a shared library, so here we declare the
 ## library to be called ``${PROJECT_NAME}``
 
-add_library(${PROJECT_NAME} ${SOURCE_FILES})
+add_library(${PROJECT_NAME}
+  ${SOURCE_FILES}
+  ${QT_HEADER_FILES}
+  ${QT_SOURCE_FILES}
+)
 
 ## Link the library with whatever Qt libraries have been defined by
 ## the ``find_package(Qt4 ...)`` line above.
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_dependencies(${PROJECT_NAME}
+        ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS
   ${PROJECT_NAME}
